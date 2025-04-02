@@ -21,56 +21,7 @@
             padding: 20px;
             position: relative;
         }
-
-        /* 新增媒体查询 */
-        @media (max-width: 768px) {
-            body {
-                padding: 10px;  /* 修改 */
-            }
-            
-            .flashcard-wrapper {
-                width: 100%;  /* 修改 */
-                height: 50vh;  /* 新增 */
-                margin: 10px 0 30px;  /* 修改 */
-            }
-
-            .front {
-                font-size: 1.8em !important;  /* 修改 */
-            }
-
-            .translation {
-                font-size: 1.5em !important;  /* 修改 */
-            }
-
-            .controls {
-                flex-direction: column;  /* 新增 */
-                width: 100%;  /* 新增 */
-                max-width: 300px;  /* 新增 */
-            }
-
-            button {
-                width: 100%;  /* 新增 */
-                margin: 5px 0;  /* 新增 */
-            }
-
-            .stats {
-                left: 10px;  /* 修改 */
-                bottom: 10px;  /* 修改 */
-                padding: 10px;  /* 修改 */
-                font-size: 0.9em;  /* 新增 */
-            }
-
-            .manage-panel {
-                right: 10px;  /* 修改 */
-                bottom: 10px;  /* 修改 */
-                padding: 10px;  /* 修改 */
-            }
-
-            .mastered-panel {
-                width: 100%;  /* 修改 */
-                box-shadow: none;  /* 新增 */
-            }
-        }        
+     
 
         .stats {
             position: fixed;
@@ -252,7 +203,7 @@
           text-decoration: none;
           border-bottom: 1px dotted currentColor;
         }
-        
+
         .privacy-notice a:hover {
           color: #1565C0;
         }
@@ -264,6 +215,68 @@
 
         .flashcard {
             touch-action: manipulation;  /* 防止双击缩放 */
+        }
+
+        /* 移动端样式必须放在最后 */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px !important;
+            }
+            
+            .flashcard-wrapper {
+                width: 100% !important;  /* 强制覆盖 */
+                height: 50vh;
+                margin: 10px 0 30px;
+            }
+
+            .front {
+                font-size: 1.8em !important;
+                padding: 20px !important;  /* 新增 */
+            }
+
+            .translation {
+                font-size: 1.5em !important;
+            }
+
+            .controls {
+                flex-direction: column;
+                width: 100%;
+                max-width: none;  /* 移除限制 */
+                gap: 10px;  /* 新增 */
+            }
+
+            button {
+                width: 100%;
+                margin: 0 !important;  /* 强制重置 */
+                padding: 15px !important;  /* 增大触摸区域 */
+            }
+
+            .stats {
+                left: 10px;
+                bottom: 60px !important;  /* 避免与管理按钮重叠 */
+                font-size: 0.9em;
+                width: calc(100% - 20px);  /* 新增 */
+            }
+
+            .manage-panel {
+                right: 10px;
+                bottom: 10px;
+                width: calc(100% - 20px);  /* 新增 */
+                text-align: center;
+            }
+
+            .manage-panel button {
+                width: 100% !important;  /* 强制全宽 */
+            }
+
+            .mastered-panel {
+                width: 100%;
+                padding: 15px;  /* 新增 */
+            }
+
+            .card-face {
+                padding: 20px !important;  /* 调整内边距 */
+            }
         }
     </style>
     <!-- 在<head>标签内添加以下内容 -->

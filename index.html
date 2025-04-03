@@ -322,6 +322,33 @@
                 padding: 10px;
             }
         }
+
+
+        @media (max-width: 480px) {
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+                margin: 15px 0;
+            }
+            
+            button {
+                width: 100%;
+                padding: 16px !important;
+                font-size: 1.2rem !important;
+            }
+          
+            .speaker-btn {
+                top: 10px;
+                right: 10px;
+                width: 40px;
+                height: 40px;
+            }
+        }
+      
+        .speaker-btn:active {
+            transform: scale(0.95);
+            background: #1976D2 !important;
+        }        
     </style>
     <script>
         const embeddedWordData = {
@@ -8761,10 +8788,18 @@
     </div>
 
     <script>
-        let allWords = [];
-        let currentWord = null;
-        let masteredWords = JSON.parse(localStorage.getItem('masteredWords') || '[]');
-        const synth = window.speechSynthesis;
+      let allWords = [];
+      let currentWord = null;
+      let masteredWords = JSON.parse(localStorage.getItem('masteredWords') || '[]');
+      const synth = window.speechSynthesis;
+
+      let voicesReady = false;
+      function initVoices() {
+          synth.onvoiceschanged = () => {
+              voicesReady = true;
+          };
+      }
+      initVoices();
 
         try {
           allWords = flattenData(embeddedWordData);
@@ -8840,9 +8875,37 @@
         function speakWord(event) {
             event.stopPropagation();
             if (!currentWord) return;
-            const utterance = new SpeechSynthesisUtterance(currentWord.word);
-            utterance.lang = 'en-US';
-            synth.speak(utterance);
+        
+            event.currentTarget.classList.add('active');
+            setTimeout(() => {
+                event.currentTarget.classList.remove('active');
+            }, 200);
+          
+            const speak = () => {
+                const utterance = new SpeechSynthesisUtterance(currentWord.word);
+                utterance.lang = 'en-US';
+                
+                const voices = synth.getVoices();
+                const englishVoice = voices.find(voice => 
+                    voice.lang === 'en-US' && voice.name.includes('Female')
+                );
+                if (englishVoice) {
+                    utterance.voice = englishVoice;
+                }
+              
+                utterance.onerror = (err) => {
+                    console.error('语音播放失败:', err);
+                    alert('语音功能需要用户交互后使用，请先点击卡片任意位置');
+                };
+              
+                synth.speak(utterance);
+            };
+          
+            if (!voicesReady) {
+                synth.onvoiceschanged = speak;
+            } else {
+                speak();
+            }
         }
 
         function updateProgress() {

@@ -182,7 +182,6 @@
             transform: translateX(0);
         }
 
-        /* 调整面板头部布局 */
         .panel-header {
             display: flex;
             justify-content: space-between;
@@ -211,7 +210,7 @@
         .close-btn:hover {
             background: #1976D2;
             transform: translateY(-1px);
-        }    
+        }
 
         .mastered-item {
             padding: 15px;
@@ -307,13 +306,19 @@
             }
             
             .controls {
-                flex-direction: column;
+                flex-direction: row;
                 margin: 15px 0;
+                gap: 8px;
             }
             
             button {
-                width: 100%;
-                padding: 18px;
+                width: auto;
+                padding: 12px 15px !important;
+                font-size: 1rem !important;
+            }
+
+            .next-btn::after {
+                content: "下一个";
             }
             
             .privacy-notice {
@@ -321,22 +326,7 @@
                 font-size: 0.75rem;
                 padding: 10px;
             }
-        }
 
-
-        @media (max-width: 480px) {
-            .controls {
-                flex-direction: column;
-                gap: 10px;
-                margin: 15px 0;
-            }
-            
-            button {
-                width: 100%;
-                padding: 16px !important;
-                font-size: 1.2rem !important;
-            }
-          
             .speaker-btn {
                 top: 10px;
                 right: 10px;
@@ -344,14 +334,14 @@
                 height: 40px;
             }
         }
-      
+
         .speaker-btn:active {
             transform: scale(0.95);
             background: #1976D2 !important;
-        }        
+        }
     </style>
     <script>
-        const embeddedWordData = {
+      const embeddedWordData = {
       "一年级上": {
         "Module1": [
           {
@@ -8739,6 +8729,8 @@
       }
     };
 
+
+
     </script>
 </head>
 <body>
@@ -8771,13 +8763,12 @@
         <button onclick="clearAllProgress()" style="margin-top: 10px;">重置学习进度</button>
     </div>
 
-    <!-- 修改后的HTML部分 -->
     <div class="mastered-panel" id="masteredPanel">
-      <div class="panel-header">
-          <h3>已掌握单词（点击删除）</h3>
-          <button class="close-btn" onclick="closeMasteredPanel()">返回</button>
-      </div>
-      <div id="masteredList"></div>
+        <div class="panel-header">
+            <h3>已掌握单词（点击删除）</h3>
+            <button class="close-btn" onclick="closeMasteredPanel()">返回</button>
+        </div>
+        <div id="masteredList"></div>
     </div>
 
     <div class="privacy-notice">
@@ -8788,26 +8779,31 @@
     </div>
 
     <script>
-      let allWords = [];
-      let currentWord = null;
-      let masteredWords = JSON.parse(localStorage.getItem('masteredWords') || '[]');
-      const synth = window.speechSynthesis;
+        let allWords = [];
+        let currentWord = null;
+        let masteredWords = JSON.parse(localStorage.getItem('masteredWords') || '[]');
+        const synth = window.speechSynthesis;
+        
+        // 初始化语音功能
+        let voicesReady = false;
+        function initVoices() {
+            synth.onvoiceschanged = () => {
+                voicesReady = true;
+            };
+        }
+        initVoices();
 
-      let voicesReady = false;
-      function initVoices() {
-          synth.onvoiceschanged = () => {
-              voicesReady = true;
-          };
-      }
-      initVoices();
-
-        try {
-          allWords = flattenData(embeddedWordData);
-          updateProgress();
-          nextWord();
-        } catch (error) {
-          console.error('词库初始化失败:', error);
-          alert('系统错误：词库加载失败，请刷新页面');
+        // 预加载数据
+        function initializeData() {
+            try {
+                allWords = flattenData(embeddedWordData);
+                if(allWords.length === 0) throw new Error("词库为空");
+                updateProgress();
+                nextWord();
+            } catch (error) {
+                console.error('初始化失败:', error);
+                document.getElementById('current-word').textContent = "数据加载失败";
+            }
         }
 
         function flattenData(data) {
@@ -8875,32 +8871,34 @@
         function speakWord(event) {
             event.stopPropagation();
             if (!currentWord) return;
-        
-            event.currentTarget.classList.add('active');
-            setTimeout(() => {
-                event.currentTarget.classList.remove('active');
-            }, 200);
-          
+
+            // 添加触摸反馈
+            const btn = event.currentTarget;
+            btn.classList.add('active');
+            setTimeout(() => btn.classList.remove('active'), 200);
+
+            // 确保语音服务已就绪
             const speak = () => {
                 const utterance = new SpeechSynthesisUtterance(currentWord.word);
                 utterance.lang = 'en-US';
                 
+                // 选择最佳发音人
                 const voices = synth.getVoices();
-                const englishVoice = voices.find(voice => 
-                    voice.lang === 'en-US' && voice.name.includes('Female')
+                const englishVoice = voices.find(v => 
+                    v.lang === 'en-US' && v.name.includes('Female')
                 );
-                if (englishVoice) {
-                    utterance.voice = englishVoice;
-                }
-              
+                if(englishVoice) utterance.voice = englishVoice;
+
+                // 错误处理
                 utterance.onerror = (err) => {
-                    console.error('语音播放失败:', err);
-                    alert('语音功能需要用户交互后使用，请先点击卡片任意位置');
+                    console.error('发音失败:', err);
+                    alert('请先点击卡片激活语音功能');
                 };
-              
+
                 synth.speak(utterance);
             };
-          
+
+            if (synth.paused) synth.resume();
             if (!voicesReady) {
                 synth.onvoiceschanged = speak;
             } else {
@@ -8968,6 +8966,7 @@
             });
         }
 
+        // 事件监听
         document.querySelector('.flashcard').addEventListener('click', (e) => {
             if (e.target.closest('button') || 
                 e.target.closest('.translation') ||
@@ -8982,6 +8981,7 @@
             }
         });
 
+        // 手势支持
         let touchStartX = 0;
         const flashcard = document.querySelector('.flashcard');
         flashcard.addEventListener('touchstart', e => {
@@ -8996,7 +8996,7 @@
         });
 
         window.addEventListener('resize', adjustFontSize);
-        window.addEventListener('load', adjustFontSize);
+        window.addEventListener('load', initializeData);
     </script>
 </body>
 </html>

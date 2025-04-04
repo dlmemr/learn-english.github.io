@@ -8764,10 +8764,11 @@
 		    if (event) event.stopPropagation();
 		    
 		    // 详细兼容性检测
-		    if (!('speechSynthesis' in window)) {
-		        alert("您的浏览器不支持语音朗读功能，请使用 Chrome 或 Edge 等浏览器");
-		        return;
-		    }
+    		if (!isSpeechSupported) {
+    		    alert("当前环境不支持语音功能，已自动跳转剑桥词典");
+    		    window.open(document.getElementById('dictLink').href, '_blank');
+    		    return;
+    		}
 		    
 		    const voices = speechSynthesis.getVoices();
 		    if (voices.length === 0) {
@@ -8841,31 +8842,53 @@
         let currentWord = null;
         let masteredWords = JSON.parse(localStorage.getItem('masteredWords') || '[]');
 
-        // 初始化数据
-		// 在 initializeData 函数中添加语音引擎加载监听
-		function initializeData() {
-		    try {
-		        allWords = flattenData(embeddedWordData);
-		        if(allWords.length === 0) throw new Error("词库为空");
-		        updateProgress();
-		        nextWord();
+		// ▼▼▼ 新增位置：在全局变量声明后，initializeData 函数前 ▼▼▼
+		let isSpeechSupported = false;
 		
-		        if ('speechSynthesis' in window) {
+		function checkSpeechSupport() {
+		    return new Promise((resolve) => {
+		        if (!('speechSynthesis' in window)) {
+		            resolve(false);
+		            return;
+		        }
+		
+		        const voices = speechSynthesis.getVoices();
+		        if (voices.length > 0) {
+		            const hasEnglish = voices.some(v => v.lang.startsWith('en-'));
+		            resolve(hasEnglish);
+		        } else {
 		            // 监听语音引擎加载完成事件
 		            speechSynthesis.onvoiceschanged = () => {
-		                console.log('可用语音列表:', speechSynthesis.getVoices());
+		                const voices = speechSynthesis.getVoices();
+		                const hasEnglish = voices.some(v => v.lang.startsWith('en-'));
+		                resolve(hasEnglish);
 		            };
-		            // 触发语音引擎初始化（部分浏览器需要）
-		            const dummyUtterance = new SpeechSynthesisUtterance('');
-		            speechSynthesis.speak(dummyUtterance);
-		            speechSynthesis.cancel();
+		            // 超时处理（5秒未加载则判定失败）
+		            setTimeout(() => resolve(false), 5000);
 		        }
+		    });
+		}
+
+        // 初始化数据
+		// 在 initializeData 函数中添加语音引擎加载监听
+		async function initializeData() {
+		    try {
+		        allWords = flattenData(embeddedWordData);
+		        if (allWords.length === 0) throw new Error("词库为空");
+		        
+		        // ▼▼▼ 新增语音支持性检测逻辑 ▼▼▼
+		        isSpeechSupported = await checkSpeechSupport();
+		        console.log('语音支持状态:', isSpeechSupported);
+		        // ▲▲▲ 新增结束 ▲▲▲
+		        
+		        updateProgress();
+		        nextWord();
 		    } catch (error) {
 		        console.error('初始化失败:', error);
 		        document.getElementById('current-word').textContent = "数据加载失败";
 		    }
 		}
-
+		
         function flattenData(data) {
             return Object.entries(data).flatMap(([grade, modules]) => 
                 Object.entries(modules).flatMap(([module, words]) => 
@@ -8893,15 +8916,11 @@
     		const dictLink = document.getElementById('dictLink');
     		dictLink.href = `https://dictionary.cambridge.org/dictionary/english/${word.word}`;
 
-    		// 检测语音支持性并切换显示
-    		const speakerBtn = document.querySelector('.speaker-btn');
-    		if ('speechSynthesis' in window) {
-    		    speakerBtn.style.display = 'block';
-    		    dictLink.style.display = 'none';
-    		} else {
-    		    speakerBtn.style.display = 'none';
-    		    dictLink.style.display = 'block';
-    		}            
+    		// 根据检测结果切换显示
+		    const speakerBtn = document.querySelector('.speaker-btn');
+		    speakerBtn.style.display = isSpeechSupported ? 'block' : 'none';
+		    dictLink.style.display = isSpeechSupported ? 'none' : 'block';  
+		              
             document.getElementById('translation').textContent = word.translation;
             document.getElementById('details').innerHTML = `
                 <p>年级：${word.grade}｜单元：${word.module}</p>
@@ -9045,7 +9064,7 @@
 		}
 
         window.addEventListener('resize', adjustFontSize);
-        window.addEventListener('load', initializeData);
+        window.addEventListener('load', () => initializeData());
     </script>
 </body>
 </html>

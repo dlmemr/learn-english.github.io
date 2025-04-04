@@ -252,6 +252,21 @@
 		    transform: scale(0.9);
 		}
 
+		.dict-link {
+		    /* 与喇叭按钮相同位置 */
+		    position: absolute;
+		    top: 15px;
+		    right: 15px;
+		    color: var(--primary-color);
+		    text-decoration: none;
+		    font-size: 1.2rem;
+		    padding: 5px;
+		    background: none;
+		    border: none;
+		    cursor: pointer;
+		    z-index: 10;
+		}
+
         #details {
             font-size: 1rem;
             color: #666;
@@ -343,6 +358,12 @@
     		    font-size: 1.2rem;
     		    top: 10px;
     		    right: 10px;
+    		}
+
+    		.dict-link {
+    		    top: 10px;
+    		    right: 10px;
+    		    font-size: 1rem;
     		}
         }
     </style>
@@ -8772,7 +8793,11 @@
             <div class="flashcard">
 				<div class="card-face front">
 				    <button class="speaker-btn" onclick="speakWord(event)">🔊</button>
-				    <span id="current-word">Loading...</span>
+				    <!-- ▼▼▼ 新增词典链接（默认隐藏） ▼▼▼ -->
+    				<a href="#" class="dict-link" id="dictLink" target="_blank" style="display: none;">
+    				    📢 剑桥词典发音
+    				</a>
+					<span id="current-word">Loading...</span>
 				</div>
                 <div class="card-face back">
                     <div class="translation" id="translation"></div>
@@ -8863,6 +8888,20 @@
         function updateCard(word) {
             currentWord = word;
             document.getElementById('current-word').textContent = word.word;
+
+    		// 动态生成剑桥词典链接
+    		const dictLink = document.getElementById('dictLink');
+    		dictLink.href = `https://dictionary.cambridge.org/dictionary/english/${word.word}`;
+
+    		// 检测语音支持性并切换显示
+    		const speakerBtn = document.querySelector('.speaker-btn');
+    		if ('speechSynthesis' in window) {
+    		    speakerBtn.style.display = 'block';
+    		    dictLink.style.display = 'none';
+    		} else {
+    		    speakerBtn.style.display = 'none';
+    		    dictLink.style.display = 'block';
+    		}            
             document.getElementById('translation').textContent = word.translation;
             document.getElementById('details').innerHTML = `
                 <p>年级：${word.grade}｜单元：${word.module}</p>

@@ -252,21 +252,6 @@
 		    transform: scale(0.9);
 		}
 
-		.dict-link {
-		    /* 与喇叭按钮相同位置 */
-		    position: absolute;
-		    top: 15px;
-		    right: 15px;
-		    color: var(--primary-color);
-		    text-decoration: none;
-		    font-size: 1.2rem;
-		    padding: 5px;
-		    background: none;
-		    border: none;
-		    cursor: pointer;
-		    z-index: 10;
-		}
-
         #details {
             font-size: 1rem;
             color: #666;
@@ -358,12 +343,6 @@
     		    font-size: 1.2rem;
     		    top: 10px;
     		    right: 10px;
-    		}
-
-    		.dict-link {
-    		    top: 10px;
-    		    right: 10px;
-    		    font-size: 1rem;
     		}
         }
     </style>
@@ -8764,11 +8743,10 @@
 		    if (event) event.stopPropagation();
 		    
 		    // 详细兼容性检测
-    		if (!isSpeechSupported) {
-    		    alert("当前环境不支持语音功能，已自动跳转剑桥词典");
-    		    window.open(document.getElementById('dictLink').href, '_blank');
-    		    return;
-    		}
+		    if (!('speechSynthesis' in window)) {
+		        alert("您的浏览器不支持语音朗读功能，请使用 Chrome 或 Edge 等浏览器");
+		        return;
+		    }
 		    
 		    const voices = speechSynthesis.getVoices();
 		    if (voices.length === 0) {
@@ -8794,11 +8772,7 @@
             <div class="flashcard">
 				<div class="card-face front">
 				    <button class="speaker-btn" onclick="speakWord(event)">🔊</button>
-				    <!-- ▼▼▼ 新增词典链接（默认隐藏） ▼▼▼ -->
-    				<a href="#" class="dict-link" id="dictLink" target="_blank" style="display: none;">
-    				    📢 剑桥词典发音
-    				</a>
-					<span id="current-word">Loading...</span>
+				    <span id="current-word">Loading...</span>
 				</div>
                 <div class="card-face back">
                     <div class="translation" id="translation"></div>
@@ -8842,53 +8816,31 @@
         let currentWord = null;
         let masteredWords = JSON.parse(localStorage.getItem('masteredWords') || '[]');
 
-		// ▼▼▼ 新增位置：在全局变量声明后，initializeData 函数前 ▼▼▼
-		let isSpeechSupported = false;
-		
-		function checkSpeechSupport() {
-		    return new Promise((resolve) => {
-		        if (!('speechSynthesis' in window)) {
-		            resolve(false);
-		            return;
-		        }
-		
-		        const voices = speechSynthesis.getVoices();
-		        if (voices.length > 0) {
-		            const hasEnglish = voices.some(v => v.lang.startsWith('en-'));
-		            resolve(hasEnglish);
-		        } else {
-		            // 监听语音引擎加载完成事件
-		            speechSynthesis.onvoiceschanged = () => {
-		                const voices = speechSynthesis.getVoices();
-		                const hasEnglish = voices.some(v => v.lang.startsWith('en-'));
-		                resolve(hasEnglish);
-		            };
-		            // 超时处理（5秒未加载则判定失败）
-		            setTimeout(() => resolve(false), 5000);
-		        }
-		    });
-		}
-
         // 初始化数据
 		// 在 initializeData 函数中添加语音引擎加载监听
-		async function initializeData() {
+		function initializeData() {
 		    try {
 		        allWords = flattenData(embeddedWordData);
-		        if (allWords.length === 0) throw new Error("词库为空");
-		        
-		        // ▼▼▼ 新增语音支持性检测逻辑 ▼▼▼
-		        isSpeechSupported = await checkSpeechSupport();
-		        console.log('语音支持状态:', isSpeechSupported);
-		        // ▲▲▲ 新增结束 ▲▲▲
-		        
+		        if(allWords.length === 0) throw new Error("词库为空");
 		        updateProgress();
 		        nextWord();
+		
+		        if ('speechSynthesis' in window) {
+		            // 监听语音引擎加载完成事件
+		            speechSynthesis.onvoiceschanged = () => {
+		                console.log('可用语音列表:', speechSynthesis.getVoices());
+		            };
+		            // 触发语音引擎初始化（部分浏览器需要）
+		            const dummyUtterance = new SpeechSynthesisUtterance('');
+		            speechSynthesis.speak(dummyUtterance);
+		            speechSynthesis.cancel();
+		        }
 		    } catch (error) {
 		        console.error('初始化失败:', error);
 		        document.getElementById('current-word').textContent = "数据加载失败";
 		    }
 		}
-		
+
         function flattenData(data) {
             return Object.entries(data).flatMap(([grade, modules]) => 
                 Object.entries(modules).flatMap(([module, words]) => 
@@ -8911,16 +8863,6 @@
         function updateCard(word) {
             currentWord = word;
             document.getElementById('current-word').textContent = word.word;
-
-    		// 动态生成剑桥词典链接
-    		const dictLink = document.getElementById('dictLink');
-    		dictLink.href = `https://dictionary.cambridge.org/dictionary/english/${word.word}`;
-
-    		// 根据检测结果切换显示
-		    const speakerBtn = document.querySelector('.speaker-btn');
-		    speakerBtn.style.display = isSpeechSupported ? 'block' : 'none';
-		    dictLink.style.display = isSpeechSupported ? 'none' : 'block';  
-		              
             document.getElementById('translation').textContent = word.translation;
             document.getElementById('details').innerHTML = `
                 <p>年级：${word.grade}｜单元：${word.module}</p>
@@ -9064,7 +9006,7 @@
 		}
 
         window.addEventListener('resize', adjustFontSize);
-        window.addEventListener('load', () => initializeData());
+        window.addEventListener('load', initializeData);
     </script>
 </body>
 </html>

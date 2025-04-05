@@ -254,6 +254,170 @@
       transform: scale(0.9);
     }
 
+    /* ===== 筛选面板样式 ===== */
+    .filter-panel {
+      position: fixed;
+      left: 15px;
+      top: 70px;
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      z-index: 100;
+      display: flex;
+      gap: 12px;
+      flex-direction: column;
+      /* 🟢 新增：竖排布局 */
+    }
+
+    /* 🟢 新增：竖排内部容器 */
+    .filter-column {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-group label {
+      font-size: 0.95rem;
+      color: #666;
+    }
+
+    .custom-select {
+      position: relative;
+      min-width: 120px;
+    }
+
+    .select-header {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f8f8f8;
+    }
+
+    .select-options {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 200;
+      width: 100%;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+      /* 🟢 新增动画属性 */
+      transition: opacity 0.2s, transform 0.2s;
+      opacity: 0;
+      transform: translateY(-10px);
+      pointer-events: none;
+    }
+
+    /* 🟢 新增：下拉菜单激活状态 */
+    .select-options[style*="display: block"] {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .select-options div {
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .select-options div:hover {
+      background: #f5f5f5;
+    }
+
+    .select-all {
+      color: var(--primary-color);
+      font-weight: bold;
+      border-bottom: 1px solid #eee;
+    }
+
+    .confirm-btn {
+      background: var(--primary-color);
+      color: white;
+      padding: 8px 20px;
+      border-radius: 20px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      width: 100%;
+      /* 🟢 新增：按钮占满宽度 */
+    }
+
+    .confirm-btn:active {
+      opacity: 0.8;
+    }
+
+    .selected-info {
+      position: fixed;
+      left: 15px;
+      top: 140px;
+      background: white;
+      padding: 10px 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      font-size: 0.9rem;
+      color: #666;
+      display: none;
+      /* 🟢 新增：默认隐藏 */
+      flex-direction: column;
+      /* 🟢 新增：竖排布局 */
+      gap: 8px;
+      /* 🟢 新增：子项间距 */
+    }
+
+    /* 🔵 修改：子项竖排样式（原为横向排列） */
+    .selected-info div {
+      display: flex;
+      flex-direction: column;
+      /* 修改为竖排 */
+      gap: 5px;
+    }
+
+    /* 🟢 新增：选项列表容器和项样式 */
+    .selection-items {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-left: 15px;
+    }
+
+    .selected-item {
+      padding: 4px 8px;
+      background: #f5f5f5;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+
+    @media (max-width: 768px) {
+      .filter-panel {
+        top: 60px;
+        left: 10px;
+        right: 10px;
+        flex-direction: column;
+      }
+
+      .selected-info {
+        display: none;
+      }
+    }
+
     #details {
       font-size: 1rem;
       color: #666;
@@ -381,7 +545,7 @@
             "example": "The teacher gave a goodbye at the end of the exam."
           },
           {
-            "word": "Howareyou?",
+            "word": "How are you?",
             "translation": "你好么？",
             "pos": "名词",
             "definition": "You are asking how well you are doing.",
@@ -588,7 +752,7 @@
             "example": "The house is built on a big wooden door."
           },
           {
-            "word": "Seeyou!",
+            "word": "See you!",
             "translation": "再见",
             "pos": "名词",
             "definition": "A person who is very interested in the subject of love.",
@@ -8777,6 +8941,59 @@
     <span id="progress">进度：0/0</span>
   </div>
 
+  <!-- 原筛选面板修改为竖排结构 -->
+  <div class="filter-panel" id="filterPanel">
+    <div class="filter-column">
+      <div class="filter-group">
+        <label>教材版本：</label>
+        <select class="filter-select" id="textbookSelect" disabled>
+          <option>外研社一起点</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>年级：</label>
+        <div class="custom-select">
+          <div class="select-header" onclick="toggleDropdown('grade')">
+            <span id="gradeLabel">全选</span>
+            <span class="arrow">▼</span>
+          </div>
+          <div class="select-options" id="gradeOptions">
+            <div class="select-all" onclick="selectAll('grade')">全选</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label>单元：</label>
+        <div class="custom-select">
+          <div class="select-header" onclick="toggleDropdown('module')">
+            <span id="moduleLabel">全选</span>
+            <span class="arrow">▼</span>
+          </div>
+          <div class="select-options" id="moduleOptions">
+            <div class="select-all" onclick="selectAll('module')">全选</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="confirm-btn" onclick="applyFilters()">确认</button>
+    </div>
+  </div>
+
+  <!-- 修改选中信息为竖排 -->
+  <div class="selected-info" id="selectedInfo">
+    <div>教材版本：<span>外研社一起点</span></div>
+    <div class="selection-group">
+      <div>年级：</div>
+      <div id="selectedGradeList" class="selection-items"></div>
+    </div>
+    <div class="selection-group">
+      <div>单元：</div>
+      <div id="selectedModuleList" class="selection-items"></div>
+    </div>
+  </div>
+
   <div class="flashcard-wrapper">
     <div class="flashcard-container">
       <div class="flashcard">
@@ -8822,33 +9039,204 @@
   </div>
 
   <script>
+    let selectedGrades = [];
+    let selectedModules = [];
+    const GRADE_LIST = ['一年级上', '一年级下', '二年级上', '二年级下', '三年级上', '三年级下', '四年级上', '四年级下', '五年级上', '五年级下', '六年级上', '六年级下'];
+    const MODULE_LIST = Array.from({ length: 10 }, (_, i) => `Module${i + 1}`);
+
     let allWords = [];
     let currentWord = null;
     let masteredWords = JSON.parse(localStorage.getItem('masteredWords') || '[]');
 
     // 初始化数据
+    function initFilters() {
+      // 初始化年级选项
+      const gradeOptions = document.getElementById('gradeOptions');
+      GRADE_LIST.forEach(grade => {
+        const div = document.createElement('div');
+        div.textContent = grade;
+        div.onclick = (e) => {
+          e.stopPropagation();
+          toggleSelect('grade', grade);
+        };
+        gradeOptions.appendChild(div);
+      });
+
+      // 初始化模块选项
+      const moduleOptions = document.getElementById('moduleOptions');
+      MODULE_LIST.forEach(module => {
+        const div = document.createElement('div');
+        div.textContent = module;
+        div.onclick = (e) => {
+          e.stopPropagation();
+          toggleSelect('module', module);
+        };
+        moduleOptions.appendChild(div);
+      });
+
+      // 非首次进入加载保存的筛选状态
+      const savedGrades = localStorage.getItem('selectedGrades');
+      const savedModules = localStorage.getItem('selectedModules');
+      if (savedGrades) selectedGrades = JSON.parse(savedGrades);
+      if (savedModules) selectedModules = JSON.parse(savedModules);
+      updateSelectedLabels();
+    }
+
     // 在 initializeData 函数中添加语音引擎加载监听
     function initializeData() {
       try {
+        // ==== 核心数据初始化 ====
         allWords = flattenData(embeddedWordData);
         if (allWords.length === 0) throw new Error("词库为空");
+
+        // ==== 筛选器初始化 ====
+        initFilters(); // 动态生成年级和模块的下拉选项
+
+        // ==== 筛选状态恢复逻辑 ====
+        const hasSavedFilters =
+          localStorage.getItem('selectedGrades') !== null &&
+          localStorage.getItem('selectedModules') !== null;
+
+        if (hasSavedFilters) {
+          // 非首次进入：应用保存的筛选条件
+          selectedGrades = JSON.parse(localStorage.getItem('selectedGrades'));
+          selectedModules = JSON.parse(localStorage.getItem('selectedModules'));
+          applyFilters(); // 应用保存的筛选条件
+        } else {
+          // 首次进入或重置后：显示筛选面板
+          document.getElementById('filterPanel').style.display = 'block';
+          document.getElementById('selectedInfo').style.display = 'none';
+
+          // 强制重置选择状态
+          selectedGrades = [];
+          selectedModules = [];
+          updateSelectedLabels(); // 更新标签显示为"全选"
+        }
+
+        // ==== 更新进度和单词 ====
         updateProgress();
         nextWord();
 
+        // ==== 语音引擎初始化 ====
         if ('speechSynthesis' in window) {
-          // 监听语音引擎加载完成事件
           speechSynthesis.onvoiceschanged = () => {
-            alert('可用语音列表:' + speechSynthesis.getVoices());
+            console.log('可用语音列表:', speechSynthesis.getVoices());
           };
-          // 触发语音引擎初始化（部分浏览器需要）
+          // 触发引擎初始化
           const dummyUtterance = new SpeechSynthesisUtterance('');
           speechSynthesis.speak(dummyUtterance);
           speechSynthesis.cancel();
         }
+
       } catch (error) {
+        // ==== 异常处理 ====
         console.error('初始化失败:', error);
         document.getElementById('current-word').textContent = "数据加载失败";
+
+        // 强制显示筛选面板
+        document.getElementById('filterPanel').style.display = 'block';
+        document.getElementById('selectedInfo').style.display = 'none';
       }
+    }
+    // ==== 新增筛选逻辑函数 ====
+    function toggleDropdown(type) {
+      const options = document.getElementById(`${type}Options`);
+      options.style.display = options.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function selectAll(type) {
+      const list = type === 'grade' ? GRADE_LIST : MODULE_LIST;
+      const current = type === 'grade' ? selectedGrades : selectedModules;
+      current.splice(0); // 清空当前选择
+      list.forEach(item => current.push(item));
+      updateSelectedLabels();
+      // ==== 新增：全选后关闭下拉菜单 ====
+      document.getElementById(`${type}Options`).style.display = 'none';
+    }
+
+    function toggleSelect(type, value) {
+      const arr = type === 'grade' ? selectedGrades : selectedModules;
+      const index = arr.indexOf(value);
+      if (index === -1) {
+        arr.push(value);
+      } else {
+        arr.splice(index, 1);
+      }
+      updateSelectedLabels();
+
+      // ==== 新增：选中后关闭下拉菜单 ====
+      document.getElementById(`${type}Options`).style.display = 'none';
+    }
+
+    function updateSelectedLabels() {
+      // ==== 年级标签显示逻辑修改 ====
+      const gradeLabel = document.getElementById('gradeLabel');
+      gradeLabel.textContent = selectedGrades.length === GRADE_LIST.length
+        ? '全选'
+        : selectedGrades.length > 3
+          ? `已选${selectedGrades.length}个`
+          : selectedGrades.join(', ');
+
+      // ==== 单元标签显示逻辑修改 ====
+      const moduleLabel = document.getElementById('moduleLabel');
+      moduleLabel.textContent = selectedModules.length === MODULE_LIST.length
+        ? '全选'
+        : selectedModules.length > 3
+          ? `已选${selectedModules.length}个`
+          : selectedModules.join(', ');
+    }
+
+    function applyFilters() {
+      // ==== 新增：必须选择至少一个年级和模块 ====
+      if (selectedGrades.length === 0 || selectedModules.length === 0) {
+        alert("请至少选择一个年级和一个单元！");
+        return;
+      }
+      // ==== 控制界面显隐 ====
+      document.getElementById('filterPanel').style.display = 'none';
+      document.getElementById('selectedInfo').style.display = 'flex';
+
+      // ==== 保存筛选状态 ====
+      localStorage.setItem('selectedGrades', JSON.stringify(selectedGrades));
+      localStorage.setItem('selectedModules', JSON.stringify(selectedModules));
+
+      // 处理空状态（视为全选）
+      const finalGrades = selectedGrades.length > 0 ? selectedGrades : GRADE_LIST;
+      const finalModules = selectedModules.length > 0 ? selectedModules : MODULE_LIST;
+
+      // ==== 数据过滤 ====
+      allWords = flattenData(embeddedWordData).filter(word =>
+        finalGrades.includes(word.grade) &&
+        finalModules.includes(word.module)
+      );
+
+      // ==== 同步已掌握单词 ====
+      masteredWords = masteredWords.filter(word =>
+        allWords.some(w => w.word === word)
+      );
+      localStorage.setItem('masteredWords', JSON.stringify(masteredWords));
+
+      // ==== 更新进度和单词 ====
+      updateProgress();
+      nextWord();
+
+      // ==== 修改点：优化竖排展示逻辑 ==== 🔵 新增代码块
+      const formatDisplay = (list, fullText) => {
+        if (list.length === GRADE_LIST.length || list.length === MODULE_LIST.length) {
+          return `<span class="selected-item">${fullText}</span>`; // 全选时单行显示
+        } else {
+          // 竖排展示每个选项
+          return list.map(item => `<span class="selected-item">${item}</span>`).join('');
+        }
+      };
+
+      // 更新年级展示
+      document.getElementById('selectedGradeList').innerHTML =
+        formatDisplay(finalGrades, '全选'); // 修改为操作容器内容
+
+      // 更新单元展示
+      document.getElementById('selectedModuleList').innerHTML =
+        formatDisplay(finalModules, '全选'); // 修改为操作容器内容
     }
 
     function flattenData(data) {
@@ -8953,14 +9341,31 @@
 
     function clearAllProgress() {
       if (confirm("确认要重置所有学习进度吗？")) {
+        // ==== 核心修改：完全重置状态 ====
+        // 1. 清空已掌握单词
         masteredWords = [];
         localStorage.removeItem('masteredWords');
+
+        // 2. 重置筛选状态（改为空数组）
+        selectedGrades = [];
+        selectedModules = [];
+        localStorage.removeItem('selectedGrades');
+        localStorage.removeItem('selectedModules');
+
+        // ==== 新增：强制显示筛选面板并隐藏信息 ====
+        document.getElementById('filterPanel').style.display = 'block';
+        document.getElementById('selectedInfo').style.display = 'none';
+
+        // 3. 重置标签显示为"全选"
+        document.getElementById('gradeLabel').textContent = '全选';
+        document.getElementById('moduleLabel').textContent = '全选';
+
+        // 4. 重新初始化数据（而不是调用applyFilters）
+        allWords = flattenData(embeddedWordData);
         updateProgress();
         nextWord();
-        closeMasteredPanel();
       }
     }
-
     function adjustFontSize() {
       const elements = [document.getElementById('current-word'), document.getElementById('translation')];
       elements.forEach(el => {
@@ -8984,10 +9389,19 @@
       document.querySelector('.flashcard').classList.toggle('flipped');
     });
 
+    // ===== 原代码中的事件监听 =====
     document.addEventListener('click', (e) => {
+      // 原有逻辑：关闭已掌握面板
       if (!e.target.closest('.mastered-panel') &&
         !e.target.closest('.manage-panel button')) {
         closeMasteredPanel();
+      }
+
+      // ==== 新增逻辑：关闭所有下拉菜单 ====
+      if (!e.target.closest('.custom-select')) { // 如果点击不在下拉组件内
+        document.querySelectorAll('.select-options').forEach(el => {
+          el.style.display = 'none';
+        });
       }
     });
 
